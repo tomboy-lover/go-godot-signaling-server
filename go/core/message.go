@@ -1,0 +1,65 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org.
+//
+// Copyright (c) 2026 Dillon Dickerson
+package core
+
+import (
+	"encoding/json"
+)
+
+// u.SendMessage(CODE_LOBBY, &WsDataMessage{ Id: 123 })
+type WsSendMsg struct {
+	Data any   `json:"data"` // 16 bytes (Interface header)
+	Code MCode `json:"code"` // 2-4 bytes (depending on MCode type)
+}
+
+type WsRecieveMsg struct {
+	Data WsDataMessage `json:"data"` // Large (Size of WsDataMessage)
+	Code MCode         `json:"code"` // 2-4 bytes
+}
+
+type ErrMessage struct {
+	ErrReason string `json:"errReason"` // 16 bytes
+	ErrCode   int16  `json:"errCode"`   // 2 bytes
+}
+
+type WsLobbyList struct {
+	LobbyList []WsDataMessage
+}
+
+type WsDataMessage struct {
+	// --- 24-BYTE FIELDS (Slice headers: Data, Len, Cap) ---
+	Offer  json.RawMessage `json:"offer,omitempty"`
+	Answer json.RawMessage `json:"answer,omitempty"`
+	Media  json.RawMessage `json:"media,omitempty"`
+	SDP    json.RawMessage `json:"sdp,omitempty"`
+	Meta   json.RawMessage `json:"meta,omitempty"`
+	Backup json.RawMessage `json:"backup,omitempty"`
+
+	// --- 16-BYTE FIELDS (String headers: Data, Len) ---
+	LobbyCode string `json:"lobbyCode,omitempty"`
+	GameId    string `json:"gameId,omitempty"`
+	GoStatus  string `json:"goStatus,omitempty"`
+
+	// --- 8-BYTE FIELDS (Pointers and int64) ---
+	IsPublic   *bool  `json:"isPublic,omitempty"`
+	IsMesh     *bool  `json:"isMesh,omitempty"`
+	LobbyAlive *bool  `json:"lobbyAlive,omitempty"`
+	IsHost     *bool  `json:"isHost,omitempty"`
+	IsOnGoing  *bool  `json:"isOnGoing,omitempty"`
+	Index      *int32 `json:"index,omitempty"`
+
+	// --- 4-BYTE FIELDS (Grouped to fill 8-byte slots) ---
+	Id     int32 `json:"id,omitempty"`
+	ToId   int32 `json:"toId,omitempty"`
+	FromId int32 `json:"fromId,omitempty"`
+	PeerId int32 `json:"peerId,omitempty"`
+
+	// --- 1-BYTE FIELDS (Grouped at the very end) ---
+	MaxPeers int8 `json:"maxPeers,omitempty"`
+
+	// Total Padding added by Go: ~7 bytes at the end to round to 8.
+	// Previous "Mixed" version likely had 16-24 bytes of internal padding.
+}
